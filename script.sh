@@ -9,6 +9,16 @@ show_menu() {
     echo "4) Scan avancé (OS et services)"
     echo "5) Quitter"
 }
+
+# Fonction pour effectuer le scan
+perform_scan() {
+    case $1 in
+        1) nmap -F -Pn $2 ;;
+        2) nmap -p 1-65535 $2 ;;
+        4) nmap -O -sV $2 ;;
+        *) echo "Option invalide" ;;
+    esac
+}
 # Afficher le menu et lire le choix de l'utilisateur
 while true; do
     show_menu
