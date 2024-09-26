@@ -25,8 +25,8 @@ ask_for_scan() {
 perform_scan() {
     case $1 in
         1) nmap -F -Pn $2 ;;
-        2) nmap -p 1-65535 $2 ;;
-        4) nmap -O -sV $2 ;;
+        2) nmap -p -Pn 1-65535 $2 ;;
+        4) nmap -O -sV -Pn $2 ;;
         5) ask_for_scan ;;
         *) echo "Option invalide" ;;
     esac
@@ -53,7 +53,8 @@ schedule_scan() {
 }
 # Vérifier si l'utilisateur a fourni des arguments
 if [ $# -eq 2 ]; then
-    perform_scan $1 $2
+    mkdir -p "$(pwd)/rapports"
+    perform_scan $1 $2 > "$(pwd)/rapports/$(date +%Y-%m-%d_%H-%M).txt"
     exit 0
 fi
 
