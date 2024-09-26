@@ -7,7 +7,18 @@ show_menu() {
     echo "2) Scan complet"
     echo "3) Scan personnalisé"
     echo "4) Scan avancé (OS et services)"
-    echo "5) Quitter"
+    echo "5) Planifier un scan"
+    echo "6) Quitter"
+}
+
+ask_for_scan() {
+    read -p "Voulez-vous effectuer un scan Nmap? (y/n): " response
+    if [ "$response" == "y" ]; then
+        show_menu
+    else
+        echo "Au revoir!"
+        exit 0
+    fi
 }
 
 # Fonction pour effectuer le scan
@@ -16,14 +27,43 @@ perform_scan() {
         1) nmap -F -Pn $2 ;;
         2) nmap -p 1-65535 $2 ;;
         4) nmap -O -sV $2 ;;
+        5) ask_for_scan ;;
         *) echo "Option invalide" ;;
     esac
 }
+
+# Fonction pour planifier les scans avec cron
+schedule_scan() {
+    read -p "Entrez la fréquence des scans (ex: @daily, @weekly): " frequency
+    show_menu;
+    read -p "Entrez l'action à effectuer " action
+    read -p "Entrez l'adresse IP ou la plage d'IP à scanner: " target
+
+    # Créer une tâche cron pour le scan
+    echo "$frequency root $HOME/script.sh $action $target" >> /etc/crontab
+    echo "Scan planifié avec succès"
+
+    # Redémarrer le service cron pour appliquer les modifications
+    service cron restart
+    echo "Service cron redémarré"
+
+    # Afficher les tâches cron actives & terminer le script
+    crontab -l
+    exit 0
+}
+# Vérifier si l'utilisateur a fourni des arguments
+if [ $# -eq 2 ]; then
+    perform_scan $1 $2
+    exit 0
+fi
+
 # Afficher le menu et lire le choix de l'utilisateur
 while true; do
     show_menu
     read -p "Entrez votre choix: " choice
-    if [ "$choice" -eq 5 ]; then
+    if [ "$choice" -eq 6 ]; then
         break
     fi
+    read -p "Entrez l'adresse IP ou la plage d'IP à scanner: " target
+    perform_scan $choice $target
 done
