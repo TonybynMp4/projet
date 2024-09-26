@@ -24,10 +24,13 @@ ask_for_scan() {
 # Fonction pour effectuer le scan
 perform_scan() {
     case $1 in
-        1) nmap -F -Pn $2 ;;
-        2) nmap -p -Pn 1-65535 $2 ;;
-        4) nmap -O -sV -Pn $2 ;;
-        5) ask_for_scan ;;
+        1) nmap -F -Pn $2 ;; # Scan rapide
+        2) nmap -p 1-65535 -Pn $2 ;; # Scan complet
+        3) # Scan personnalisé
+            read -p "Entrez les ports spécifiques ou la plage de ports à scanner (ex: 22,80,443 ou 1000-2000): " ports
+            nmap -p $ports -Pn $2 ;;
+        4) nmap -O -sV -Pn $2 ;; # Scan avancé (OS et services)
+        5) schedule_scan ;; # Planification des scans
         *) echo "Option invalide" ;;
     esac
 }
@@ -51,6 +54,7 @@ schedule_scan() {
     crontab -l
     exit 0
 }
+
 # Vérifier si l'utilisateur a fourni des arguments
 if [ $# -eq 2 ]; then
     mkdir -p "$(pwd)/rapports"
