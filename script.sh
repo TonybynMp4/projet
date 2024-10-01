@@ -7,18 +7,11 @@ show_menu() {
     echo "2) Scan complet"
     echo "3) Scan personnalisé"
     echo "4) Scan avancé (OS et services)"
+    if [ -n "$1" ] && [ "$1" -eq 1 ]; then
+        return
+    fi
     echo "5) Planifier un scan"
     echo "6) Quitter"
-}
-
-ask_for_scan() {
-    read -p "Voulez-vous effectuer un scan Nmap? (y/n): " response
-    if [ "$response" == "y" ]; then
-        show_menu
-    else
-        echo "Au revoir!"
-        exit 0
-    fi
 }
 
 # Fonction pour effectuer le scan
@@ -30,7 +23,6 @@ perform_scan() {
             read -p "Entrez les ports spécifiques ou la plage de ports à scanner (ex: 22,80,443 ou 1000-2000): " ports
             nmap -p $ports -Pn $2 ;;
         4) nmap -O -sV -Pn $2 ;; # Scan avancé (OS et services)
-        5) schedule_scan ;; # Planification des scans
         *) echo "Option invalide" ;;
     esac
 }
@@ -38,21 +30,23 @@ perform_scan() {
 # Fonction pour planifier les scans avec cron
 schedule_scan() {
     read -p "Entrez la fréquence des scans (ex: @daily, @weekly): " frequency
-    show_menu;
-    read -p "Entrez l'action à effectuer " action
+    show_menu 1
+    read -p "Entrez le type de scan à effectuer (1-4): " action
     read -p "Entrez l'adresse IP ou la plage d'IP à scanner: " target
 
-    # Créer une tâche cron pour le scan
-    echo "$frequency root $HOME/script.sh $action $target" >> /etc/crontab
-    echo "Scan planifié avec succès"
+    # Vérifier si l'utilisateur a fourni des arguments
+    if [ -z "$frequency" ] || [ -z "$action" ] || [ -z "$target" ]; then
+        echo "Veuillez fournir des valeurs valides"
+        return 1
+    fi
 
-    # Redémarrer le service cron pour appliquer les modifications
-    service cron restart
-    echo "Service cron redémarré"
+    # Créer une tâche cron pour le scan
+    (crontab -l 2>/dev/null; echo "$frequency $(whoami) $(pwd)/script.sh $action $target") | crontab -
+    echo "Scan planifié avec succès"
 
     # Afficher les tâches cron actives & terminer le script
     crontab -l
-    exit 0
+    return 0
 }
 
 # Vérifier si l'utilisateur a fourni des arguments
@@ -62,13 +56,18 @@ if [ $# -eq 2 ]; then
     exit 0
 fi
 
-# Afficher le menu et lire le choix de l'utilisateur
 while true; do
     show_menu
     read -p "Entrez votre choix: " choice
     if [ "$choice" -eq 6 ]; then
         break
     fi
-    read -p "Entrez l'adresse IP ou la plage d'IP à scanner: " target
-    perform_scan $choice $target
+    if [ "$choice" -gt 0 ] && [ "$choice" -lt 5 ]; then
+        read -p "Entrez l'adresse IP ou la plage d'IP à scanner: " target
+        perform_scan $choice $target
+    elif [ "$choice" -eq 5 ]; then
+        schedule_scan
+    else
+        echo "Option invalide"
+    fi
 done
