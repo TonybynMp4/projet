@@ -43,7 +43,7 @@ schedule_scan() {
     read -p "Entrez l'adresse IP ou la plage d'IP à scanner: " target
 
     # Créer une tâche cron pour le scan
-    echo "$frequency root $HOME/script.sh $action $target" >> /etc/crontab
+    echo "$frequency root $(pwd)/script.sh $action $target" >> /etc/crontab
     echo "Scan planifié avec succès"
 
     # Redémarrer le service cron pour appliquer les modifications
