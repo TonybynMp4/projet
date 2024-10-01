@@ -41,7 +41,7 @@ schedule_scan() {
     fi
 
     # Créer une tâche cron pour le scan
-    (crontab -l 2>/dev/null; echo "$frequency $(whoami) $(pwd)/script.sh $action $target") | crontab -
+    (crontab -l 2>/dev/null; echo "$frequency $(pwd)/script.sh $action $target") | crontab -
     echo "Scan planifié avec succès"
 
     # Afficher les tâches cron actives & terminer le script
