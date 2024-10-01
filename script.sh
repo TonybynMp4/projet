@@ -1,5 +1,13 @@
 #!/bin/bash
 
+# Ajouter le PATH pour que cron trouve les binaires comme nmap
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+
+# Définir le répertoire de base pour les rapports et les logs (chemin absolu)
+BASE_DIR="/home/tony/projet"  # À modifier en fonction de votre environnement
+REPORT_DIR="$BASE_DIR/rapports"
+LOG_FILE="$BASE_DIR/cron.log"
+
 # Fonction pour afficher le menu
 show_menu() {
     echo "Choisissez le type de scan Nmap:"
@@ -41,7 +49,7 @@ schedule_scan() {
     fi
 
     # Créer une tâche cron pour le scan
-    (crontab -l 2>/dev/null; echo "$frequency $(pwd)/script.sh $action $target") | crontab -
+    (crontab -l 2>/dev/null; echo "$frequency $BASE_DIR/script.sh $action $target >> $LOG_FILE 2>&1") | crontab -
     echo "Scan planifié avec succès"
 
     # Afficher les tâches cron actives & terminer le script
@@ -51,8 +59,8 @@ schedule_scan() {
 
 # Vérifier si l'utilisateur a fourni des arguments
 if [ $# -eq 2 ]; then
-    mkdir -p "$(pwd)/rapports"
-    perform_scan $1 $2 > "$(pwd)/rapports/$(date +%Y-%m-%d_%H-%M).txt"
+    mkdir -p "$REPORT_DIR"
+    perform_scan $1 $2 > "$REPORT_DIR/$(date +%Y-%m-%d_%H-%M).txt" 2>&1
     exit 0
 fi
 
